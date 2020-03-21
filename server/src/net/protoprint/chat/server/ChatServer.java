@@ -33,22 +33,32 @@ public class ChatServer implements TCPConnectionListener {
 	}
 
 	@Override
-	public void onConnectionReady(TCPConnection tcpConnection) {
-
+	public synchronized void onConnectionReady(TCPConnection tcpConnection) {
+		connections.add(tcpConnection);
+		sendToAllConnections("Client connected: " + tcpConnection);
 	}
 
 	@Override
-	public void onReceiveString(TCPConnection tcpConnection, String value) {
-
+	public synchronized void onReceiveString(TCPConnection tcpConnection, String value) {
+		sendToAllConnections(value);
 	}
 
 	@Override
-	public void onDisconnect(TCPConnection tcpConnection) {
-
+	public synchronized void onDisconnect(TCPConnection tcpConnection) {
+		connections.remove(tcpConnection);
+		sendToAllConnections("Client disconnected: " + tcpConnection);
 	}
 
 	@Override
-	public void onException(TCPConnection tcpConnection, Exception e) {
+	public synchronized void onException(TCPConnection tcpConnection, Exception e) {
+		System.out.println("TCPConnection exception: " + e);
+	}
 
+	private void sendToAllConnections(String value) {
+		System.out.println(value);
+		final int cnt = connections.size();
+		for (int i = 0; i < cnt ; i++) {
+			connections.get(i).sendString(value);
+		}
 	}
 }
